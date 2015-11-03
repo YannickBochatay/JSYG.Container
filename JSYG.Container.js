@@ -6,12 +6,12 @@
     if (typeof define != "undefined" && define.amd) define("jsyg-container",["jsyg","jsyg-path"],factory);
     else if (typeof JSYG != "undefined") {
         
-        if (JSYG.Path) factory(JSYG,JSYG.Alignment);
+        if (JSYG.Path) factory(JSYG);
         else throw new Error("JSYG.Path is needed");
     }
     else throw new Error("JSYG is needed");
     
-})(function(JSYG,Alignment) {
+})(function(JSYG) {
     
     "use strict";
     
