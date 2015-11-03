@@ -22,12 +22,10 @@
         </svg>
         
         <br/>
-        <button id="alignLeft">align left</button>
-        <button id="alignRight">align right</button>
-        <button id="alignCenter">align center</button>
-        <button id="alignTop">align top</button>
-        <button id="alignBottom">align bottom</button>
-        <button id="alignMiddle">align middle</button>
+        <button id="group">Group items</button>
+        <button id="translate">Translate group</button>
+        <button id="rotate">Rotate group</button>
+        <button id="free">Free Items</button>
         
         <script>
             
@@ -35,18 +33,22 @@
             
             container.appendTo('svg');
             
-            container.addItems("svg *");
-            
-            container.setDim({x:0,y:0,width:500,height:500});
-            
-            ["Left","Right","Center","Top","Bottom","Middle"].forEach(function(direction) {
-                
-                new JSYG("#align"+direction).on("click",function() {
-                    container["align"+direction]();
-                });
-                
+            new JSYG("#group").on("click",function() {
+                 container.addItems("svg > *");
             });
             
+            new JSYG("#translate").on("click",function() {
+                 container.translate(50,50);
+            });
+            
+            new JSYG("#rotate").on("click",function() {
+                 container.rotate(30);
+            });
+            
+            new JSYG("#free").on("click",function() {
+                 container.freeItems();
+                 container.resetTransf();
+            });
             
         </script>
     </body>
