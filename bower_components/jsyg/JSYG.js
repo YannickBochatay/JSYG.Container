@@ -93,9 +93,14 @@
 
 	
     JSYG.ns = NS;
+    
+    function isSVG(elmt) {
+        
+        return !!elmt && elmt.namespaceURI === NS.svg;
+    }
 	
     JSYG.prototype.isSVG = function() {
-        return !!this[0] && this[0].namespaceURI == NS.svg;
+        return isSVG(this[0]);
     };
 	
     JSYG.prototype.isSVGroot = function() {
@@ -120,7 +125,7 @@
 				
         this.each(function() {
 				
-            if (this.namespaceURI == NS.svg){
+            if (isSVG(this)){
 				
                 this.removeAttributeNS(NS.xlink,'href'); //sinon ajoute un nouvel attribut
                 this.setAttributeNS(NS.xlink,'href',val);
@@ -135,7 +140,7 @@
 		
         this.each(function() {
 				
-            if (this.namespaceURI == NS.svg) this.removeAttributeNS(NS.xlink,'href');
+            if (isSVG(this)) this.removeAttributeNS(NS.xlink,'href');
             else this.removeAttribute("href");
         });
 		
@@ -159,7 +164,7 @@
             });
         }
         else if (name == "href") return xlinkHref.call(this,value);
-        else if (name == "viewBox" || name== "viewbox"){
+        /*else if (name == "viewBox" || name== "viewbox"){
 			
             if (value === undefined) return this[0].getAttribute("viewBox");
 			
@@ -167,23 +172,31 @@
                 if (JSYG.svgViewBoxTags.indexOf(this.tagName) !=-1)
                     this.setAttribute("viewBox",value);					
             });
-        }
+        }*/
         else {
 			
-            if (value === undefined) return $.fn.attr.apply(this,arguments);
+            if (value === undefined) {
+                
+                if (isSVG(this[0])) return this[0].getAttribute(name);
+                else return $.fn.attr.apply(this,arguments);
+            }
 			
             return this.each(function() {
                 //jQuery passe tous les attributs en minuscule, ce qui n'est pas le cas des attributs SVG
-                if (new JSYG(this).isSVG()) this.setAttribute(name,value);
+                if (isSVG(this)) this.setAttribute(name,value);
                 else $.attr(this,name,value); 
             });			
         }
     };
-	
-    JSYG.prototype.attrRemove = function(name) {
+    
+    JSYG.prototype.removeAttr = function(name) {
 		
-        if (typeof name == "string" && name == "href") return xlinkHrefRemove.call(this);
-        else return $.fn.attr.apply(this,arguments);
+        if (name == "href") return xlinkHrefRemove.call(this);
+        else return this.each(function() {
+            //jQuery passe tous les attributs en minuscule, ce qui n'est pas le cas des attributs SVG
+            if (isSVG(this)) this.removeAttribute(name);
+            else $.removeAttr(this,name);
+        });
     };
 	
     JSYG.each = function(list,callback) {
@@ -345,10 +358,8 @@
             		
             var $this = new JSYG(this);
 			
-            if ($this.isSVG()) {
-                if (!$this.isSVGroot() || cssProp == "width" || cssProp == "height") this.setAttribute(cssProp,val);
-            }
-            //if (JSYG.svgCssProperties.indexOf(cssProp) != -1) $.fn.css.call($this,prop,val);
+            if ($this.isSVG() && JSYG.svgCssProperties.indexOf(cssProp) != -1) this.setAttribute(cssProp,val);
+            
             $.fn.css.call($this,prop,val);
         });
     };
@@ -380,12 +391,12 @@
 		
         var tag = this[0].tagName,
 			
-            box = this[0].getBBox(),
+        box = this[0].getBBox(),
 			
-            dim = { //box est en lecture seule
-                left : box.x,
-                top : box.y
-            };
+        dim = { //box est en lecture seule
+            left : box.x,
+            top : box.y
+        };
 
         if (tag === 'use' && !JSYG.support.svgUseBBox) {
             //bbox fait alors référence à l'élément source donc il faut ajouter les attributs de l'élément lui-meme
@@ -416,7 +427,7 @@
             }
 
             box = this.attr("viewBox");
-            if (box) this.attrRemove("viewBox");
+            if (box) this.removeAttr("viewBox");
 
             mtx = this[0].getScreenCTM();
 
@@ -639,7 +650,7 @@
 				
             get: function( elem, computed, extra ) {
 				
-                if (elem.namespaceURI != NS.svg || elem.tagName == 'svg' && elem.parentNode && elem.parentNode.namespaceURI != NS.svg) return hookWidthOri.get.apply(null,arguments);
+                if (!isSVG(elem) || elem.tagName == 'svg' && elem.parentNode && !isSVG(elem.parentNode)) return hookWidthOri.get.apply(null,arguments);
                 else try { return elem.getBBox && elem.getBBox().width+"px"; }
                 catch (e) { return null; }
             },
@@ -647,8 +658,8 @@
             set: function( elem, value ) {
 				
                 var $elem = new JSYG(elem),
-                    width = hookWidthOri.set.apply(null,arguments),
-                    matches, i;
+                width = hookWidthOri.set.apply(null,arguments),
+                matches, i;
 								
                 if (!$elem.isSVG()) return width;
 				
@@ -668,6 +679,7 @@
 					
                     default :
                         elem.setAttribute("width",width);
+                        if ($elem.isSVGroot()) elem.style.width = width;
                 }
 				
                 return width+"px";
@@ -678,7 +690,7 @@
 				
             get: function( elem, computed, extra ) {
 				
-                if (elem.namespaceURI != NS.svg || elem.tagName == 'svg' && elem.parentNode && elem.parentNode.namespaceURI != NS.svg) return hookHeightOri.get.apply(null,arguments);
+                if (!isSVG(elem) || elem.tagName == 'svg' && elem.parentNode && !isSVG(elem.parentNode)) return hookHeightOri.get.apply(null,arguments);
                 else try { return elem.getBBox && elem.getBBox().height+"px"; }
                 catch (e) { return null; }
             },
@@ -686,9 +698,9 @@
             set: function( elem, value ) {
 				
                 var $elem = new JSYG(elem),
-                    height = hookHeightOri.set.apply(null,arguments),
-                    matches,
-                    i;
+                height = hookHeightOri.set.apply(null,arguments),
+                matches,
+                i;
 								
                 if (!$elem.isSVG()) return height;
 				
@@ -696,7 +708,7 @@
 				
                 switch (this.tagName) {
                     
-                     case 'circle' :
+                    case 'circle' :
                         matches = rNumNunit.exec(height);
                         elem.setAttribute('r',(matches[1]/2)+matches[2]);
                         break;
@@ -708,6 +720,7 @@
 					
                     default :
                         elem.setAttribute("height",height);
+                        if ($elem.isSVGroot()) elem.style.height = height;
                 }
 				
                 return height+"px";
@@ -740,7 +753,7 @@
     JSYG.round = function(number,precision) {
         return Math.round(number * Math.pow(10,precision)) / Math.pow(10,precision);
     };
-	
+    	
     /*
 	JSYG.isXMLDoc = function(elem) {
 		
@@ -749,12 +762,16 @@
 		return $.isXMLDoc($elem[0]) || $elem.isSVG();
 	};*/
 	
-	
-    //Récupère toutes les fonctions statiques
     (function() {
+        
+        //Récupère toutes les fonctions statiques
         for (var n in $) {
             if ($.hasOwnProperty(n) && !JSYG.hasOwnProperty(n)) JSYG[n] = $[n];
         }
+        
+        //garde une référence vers jQuery
+        JSYG.$ = $;
+        
     }());
 	
     return JSYG;
@@ -1612,7 +1629,7 @@
     if (typeof define == "function" && define.amd) define("jsyg-utils",["jsyg-wrapper","jsyg-matrix","jsyg-vect","jsyg-point","jsyg-strutils"],factory);
     else if (root.JSYG) {
         
-        if (JSYG.Matrix && JSYG.Vect && JSYG.Point && JSYG.utf8encode) factory(JSYG,JSYG.Matrix,JSYG.Vect,JSYG.Point);
+        if (JSYG.Matrix && JSYG.Vect && JSYG.Point && JSYG.utf8encode) factory(JSYG,JSYG.Matrix,JSYG.Vect,JSYG.Point,JSYG);
         else throw new Error("Missing dependency");
     }
     else throw new Error("JSYG is needed");
@@ -1975,9 +1992,9 @@
             
             var $this = new JSYG(this);
             
-            $this.attrRemove('style');
+            $this.removeAttr('style');
             
-            if ($this.isSVG()) JSYG.svgCssProperties.forEach(function(attr) { $this.attrRemove(attr); });
+            if ($this.isSVG()) JSYG.svgCssProperties.forEach(function(attr) { $this.removeAttr(attr); });
             
         });
         
@@ -2259,7 +2276,7 @@
                 height = parseFloat(this.css("height"));
                 
                 viewBox = this.attr("viewBox");
-                if (viewBox) this.attrRemove("viewBox");
+                if (viewBox) this.removeAttr("viewBox");
                 
                 mtx = this.getMtx('screen');
                 
@@ -2561,7 +2578,7 @@
                     if ("y" in opt) mtx = mtx.translate(0,opt.y-box.y);
                     if ("width" in opt && box.width!=0)	mtx = mtx.scaleX(opt.width/box.width,box.x,box.y);
                     if ("height" in opt && box.height!=0)	mtx = mtx.scaleY(opt.height/box.height,box.x,box.y);
-                                        
+                    
                     $this.mtx2attrs({mtx:mtx});
                     
                     break;
@@ -2643,7 +2660,7 @@
                 
                 default :
                     
-                    if ($this.isSVG()) {
+                    if ($this.isSVG() && !$this.isSVGroot()) {
                         
                         //les images dont l'url est un fichier svg se comportent plus comme des conteneurs (du moins avec ff)
                         if (isSVGImage($this)) {
@@ -2702,7 +2719,7 @@
                         
                         if ("width" in opt) {
                             
-                            if (tag == 'svg') $this.css('width',opt.width).attr('width',opt.width);
+                            if (tag == 'svg') $this.css('width',opt.width);
                             else {
                                 
                                 node.style.width = Math.max(0,opt.width
@@ -2715,7 +2732,7 @@
                         
                         if ("height" in opt) {
                             
-                            if (tag == 'svg') $this.css('height',opt.height).attr('height',opt.height);
+                            if (tag == 'svg') $this.css('height',opt.height);
                             else {
                                 node.style.height = Math.max(0,opt.height
                                     -getPropNum($this,'border-top-width')
@@ -3173,7 +3190,7 @@
         
         if (opt instanceof Matrix) opt = {mtx:opt};
         else opt = $.extend({},opt);
-                
+        
         this.each(function() {
             
             var $this = new JSYG(this),
@@ -3190,7 +3207,7 @@
             jPath,seg,letter,
             x,y,
             i,N;
-                        
+            
             if (!dim) return;
             
             if (keepRotation && tagsChoixRotation.indexOf(tag)!==-1) {
@@ -3200,7 +3217,7 @@
             
             //les images dont l'url est un fichier svg se comportent plus comme des conteneurs (du moins avec ff)
             if (isSVGImage($this)) tag = "use";
-                        
+            
             switch(tag) {
                 
                 case 'circle' :
@@ -3260,9 +3277,9 @@
                     break;
                 
                 case 'path' :
-                                        
+                    
                     if (!JSYG.Path) throw new Error("Il faut inclure le module JSYG.Path pour pouvoir utiliser la méthode mtx2attrs sur les chemins");
-                                        
+                    
                     jPath = new JSYG.Path(this).rel2abs();
                     list = this.pathSegList;
                     i=0,N=list.numberOfItems;
@@ -3631,7 +3648,7 @@
                 }
                 
                 $nodes.off("mousemove",mousemoveFct);
-                new JSYG(this).off("mouseup",mouseupFct);
+                new JSYG(document).off("mouseup",mouseupFct);
             }
             
             e.preventDefault();
@@ -3952,7 +3969,7 @@
         
         if (standalone && this.isSVG()) {
             jNode.walkTheDom(function() {
-                new JSYG(this).style2attr().attrRemove("style");
+                new JSYG(this).style2attr().removeAttr("style");
             });
         }
         
@@ -4121,6 +4138,58 @@
                 img.onerror = function() { reject( new Error("Impossible de charger l'image "+src) ); };
                 img.src = src;
             });
+        });
+    };
+    
+    /**
+     * Move back each element before his previous sibling
+     * @returns {JSYG}
+     */
+    JSYG.prototype.moveBack = function() {
+            
+        return this.each(function() {
+           
+            var $this = new JSYG(this);
+               
+            $this.insertBefore( $this.prev() );
+        });
+    };
+    
+    /**
+     * Move back each element before his parent first child
+     * @returns {JSYG}
+     */
+    JSYG.prototype.moveToBack = function() {
+            
+        return this.each(function() {
+           
+            new JSYG(this).parent().prepend(this);
+        });
+    };
+    
+    /**
+     * Move each element after his next sibling
+     * @returns {JSYG}
+     */
+    JSYG.prototype.moveFront = function() {
+            
+        return this.each(function() {
+           
+            var $this = new JSYG(this);
+               
+            $this.insertAfter( $this.next() );
+        });
+    };
+    
+     /**
+     * Move each element after his parent last child
+     * @returns {JSYG}
+     */
+    JSYG.prototype.moveToFront = function() {
+            
+        return this.each(function() {
+           
+            new JSYG(this).parent().append(this);
         });
     };
     
