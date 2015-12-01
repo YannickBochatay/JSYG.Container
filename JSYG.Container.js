@@ -93,7 +93,7 @@
                 try { $this.setMtx( mtx.multiply($this.getMtx(that)) ); }
                 catch(e) {}
                 
-                $this.appendTo(parent);
+                $this.insertAfter(that[0]);
                 
                 that.trigger('freeitem',that[0],this);
                 that.trigger('change');
