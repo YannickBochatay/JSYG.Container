@@ -82,7 +82,7 @@
         that = this,
         args = JSYG.makeArray( arguments.length === 0 ? this.children() : arguments);
         
-        args.forEach(function(elmt) {
+        args.reverse().forEach(function(elmt) {
             
             new JSYG(elmt).each(function() {
                 
