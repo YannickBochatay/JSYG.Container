@@ -3,7 +3,12 @@
 
 (function(factory) {
     
-    if (typeof define != "undefined" && define.amd) define("jsyg-container",["jsyg","jsyg-path"],factory);
+    if (typeof module == "object" && typeof module.exports == "object") {
+      module.exports = factory( require("jsyg"), require("jysg-path") );
+    }
+    else if (typeof define != "undefined" && define.amd) {
+      define("jsyg-container",["jsyg","jsyg-path"],factory);
+    }
     else if (typeof JSYG != "undefined") {
         
         if (JSYG.Path) factory(JSYG);

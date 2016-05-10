@@ -4,6 +4,7 @@
     "description" : "Container plugin for JSYG framework",
     "main": "JSYG.Container.js",
     "moduleType": [
+        "node",
         "amd",
         "globals"
     ],
