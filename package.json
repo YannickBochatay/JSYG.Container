@@ -1,6 +1,6 @@
 {
   "name": "jsyg-container",
-  "version": "0.0.8",
+  "version": "0.1.0",
   "description": "Container plugin for JSYG framework",
   "main": "JSYG.Container.js",
   "directories": {
