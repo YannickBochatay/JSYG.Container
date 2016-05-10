@@ -4,7 +4,7 @@
 (function(factory) {
     
     if (typeof module == "object" && typeof module.exports == "object") {
-      module.exports = factory( require("jsyg"), require("jysg-path") );
+      module.exports = factory( require("jsyg"), require("jsyg-path") );
     }
     else if (typeof define != "undefined" && define.amd) {
       define("jsyg-container",["jsyg","jsyg-path"],factory);
