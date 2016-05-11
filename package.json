@@ -1,6 +1,6 @@
 {
   "name": "jsyg-container",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Container plugin for JSYG framework",
   "main": "JSYG.Container.js",
   "directories": {
@@ -27,7 +27,7 @@
   "homepage": "https://github.com/YannickBochatay/JSYG.Container#readme",
   "devDependencies": {},
   "dependencies": {
-    "jsyg": "^0.6.7",
-    "jsyg-path": "^0.1.5"
+    "jsyg": ">0.0.0",
+    "jsyg-path": ">0.0.0"
   }
 }
