@@ -1,6 +1,8 @@
 # JSYG.Container
 Container plugin for [JSYG framework](https://github.com/YannickBochatay/JSYG)
 
+## ⚠️ Deprecated. Use [@jsyg/container](https://github.com/YannickBochatay/jsyg-monorepo/tree/main/packages/container) instead.
+
 ### Demo
 [http://yannickbochatay.github.io/JSYG.Container/](http://yannickbochatay.github.io/JSYG.Container/)
 
